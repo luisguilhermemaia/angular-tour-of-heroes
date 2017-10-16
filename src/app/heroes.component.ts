@@ -1,18 +1,26 @@
-import { HeroService } from './hero.service';
-import { HeroDetailComponent } from './hero-detail.component';
 import { Component, OnInit } from '@angular/core';
-import { Hero } from './Hero';
 import { Router } from '@angular/router';
+import { Hero } from './Hero';
+import { HeroDetailComponent } from './hero-detail.component';
+import { HeroService } from './hero.service';
 
 @Component({
   selector: 'app-heroes',
   template: `
     <h2>My Heroes</h2>
+    <div>
+      <label>Hero name:</label> <input #heroName />
+      <button (click)="add(heroName.value); heroName.value=''">
+        Add
+      </button>
+    </div>
     <ul class="heroes">
       <li *ngFor="let hero of heroes"
         [class.selected]="hero === selectedHero"
         (click)="onSelect(hero)">
         <span class="badge">{{hero.id}}</span> {{hero.name}}
+        <button class="delete"
+        (click)="delete(hero); $event.stopPropagation()">x</button>
       </li>
     </ul>
     <div *ngIf="selectedHero">
@@ -22,7 +30,8 @@ import { Router } from '@angular/router';
       <button (click)="gotoDetail()">View Details</button>
     </div>
     `,
-    styles: [`
+  styles: [
+    `
     a {text-decoration: none}
     .selected {
       background-color: #CFD8DC !important;
@@ -71,22 +80,49 @@ import { Router } from '@angular/router';
       margin-right: .8em;
       border-radius: 4px 0 0 4px;
     }
-  `]
+    button.delete {
+      float:right;
+      margin-top: 2px;
+      margin-right: .8em;
+      background-color: gray !important;
+      color:white;
+    }
+  `
+  ]
 })
 export class HeroesComponent implements OnInit {
   heroes: Hero[];
   selectedHero: Hero;
 
-  constructor(
-    private router: Router,
-    private heroService: HeroService) { }
+  constructor(private router: Router, private heroService: HeroService) {}
 
   getHeroes(): void {
-    this.heroService.getHeroes().then(heroes => this.heroes = heroes);
+    this.heroService.getHeroes().then(heroes => (this.heroes = heroes));
   }
 
   ngOnInit(): void {
     this.getHeroes();
+  }
+
+  add(name: string): void {
+    name = name.trim();
+    if (!name) {
+      return;
+    }
+
+    this.heroService.create(name).then(hero => {
+      this.heroes.push(hero);
+      this.selectedHero = null;
+    });
+  }
+
+  delete(hero: Hero): void {
+    this.heroService.delete(hero.id).then(() => {
+      this.heroes = this.heroes.filter(h => h !== hero);
+      if (this.selectedHero === hero) {
+        this.selectedHero = null;
+      }
+    });
   }
 
   onSelect(hero: Hero): void {

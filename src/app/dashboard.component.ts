@@ -13,6 +13,7 @@ import { Component, OnInit } from '@angular/core';
         </div>
       </a>
     </div>
+    <app-hero-search></app-hero-search>
   `,
   styles: [`a {text-decoration: none}`]
 })
